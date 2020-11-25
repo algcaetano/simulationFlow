@@ -3,7 +3,7 @@
 #include"Lattice.h"
 #include<omp.h>
 
-double power(const double& base, int exp) {
+inline double power(const double& base, int exp) {
 	double result = 1;
 	for (int i = 0; i < exp; i++) {
 		result *= base;
@@ -41,14 +41,15 @@ inline double calculateFiEq(int& ex, int& ey, double& eDotE, double& as2, double
 	//double theta = T - 1;
 	double F = as2 * (ux * ex + uy * ey);
 	double R = eDotE * theta - uDotU;
+	double F2 = power(F, 2);
 	//double C2 = (power(F, 2) + R - 2 * theta) / 2;
 	//double C3 = (power(F, 3) + 3 * F * R - 12 * F * theta) / 6;
 	//double C4 = (power(F, 4) + 6 * power(F, 2) * R - 3 * (12 * power(F, 2) * theta - power(R, 2)) - 24 * R * theta + 24 * power(theta, 2)) / 24;
 	//return w * rho * (1 + F + C2 + C3 + C4);
 	result += F;
-	result += (power(F, 2) + R - 2 * theta) / 2;
+	result += (F2 + R - 2 * theta) / 2;
 	result += (power(F, 3) + 3 * F * R - 12 * F * theta) / 6;
-	result += (power(F, 4) + 6 * power(F, 2) * R - 3 * (12 * power(F, 2) * theta - power(R, 2)) - 24 * R * theta + 24 * power(theta, 2)) / 24;
+	result += (power(F2, 2) + 6 * F2 * R - 3 * (12 * F2 * theta - power(R, 2)) - 24 * R * theta + 24 * power(theta, 2)) / 24;
 	result *= (w * rho);
 	return result;
 }

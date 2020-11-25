@@ -49,7 +49,7 @@ int main() {
 	std::vector<std::vector<double>> fTemp = f;
 	std::vector<double> u(f.size());
 	std::vector<double> uOld = u;
-	double rho, ux, uy, T, txx, txy, tyy, uDotU, theta;
+	double rho, ux, uy, T, uDotU, theta;
 	std::vector<double> uxf2(lattice.ex.size()), uxfUyf(lattice.ex.size()), uyf2(lattice.ex.size()); //velocidades de flutuação ao quadrado
 	double error = 1;
 	int saveControl = 1;

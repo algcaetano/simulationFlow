@@ -49,6 +49,7 @@ void Lattice::setLattice(int order, std::vector<int>& ex, std::vector<int>& ey, 
 			eTemp[i] = as2 * (ex2[i] + ey2[i]);
 		}
 		eDotE = eTemp;
+		numDir = ex.size();
 		break;
 	}
 }

@@ -15,7 +15,7 @@ inline void calculateMacVar(double& rho, double& ux, double& uy, double& T, doub
 	std::vector<double>& uxfUyf, std::vector<double>& uyf2, const std::vector<double>& f, const Lattice& dir) {
 	rho = ux = uy = T = 0.0;
 	double tempFi;
-	for (int i = 0; i < f.size(); i++) {
+	for (int i = 0; i < dir.numDir; i++) {
 		tempFi = f[i];
 		rho += tempFi;
 		ux += tempFi * dir.ex[i];
@@ -26,7 +26,7 @@ inline void calculateMacVar(double& rho, double& ux, double& uy, double& T, doub
 	uy /= rho;
 	uDotU = dir.as2 * (power(ux, 2) + power(uy, 2));
 	T = ((T / rho) - uDotU) / 2;
-	for (int i = 0; i < f.size(); i++) {
+	for (int i = 0; i < dir.numDir; i++) {
 		uxf2[i] = dir.as2 * power((dir.ex[i] - ux), 2);
 		uxfUyf[i] = dir.as2 * (dir.ex[i] - ux) * (dir.ey[i] - uy);
 		uyf2[i] = dir.as2 * power((dir.ey[i] - uy), 2);
@@ -55,23 +55,23 @@ inline double calculateFiEq(int& ex, int& ey, double& eDotE, double& as2, double
 }
 
 inline void calculateFEq(double& rho, double& ux, double& uy, double& theta, double& uDotU, std::vector<double>& fEq, Lattice& dir) {
-	for (int i = 0; i < fEq.size();i++) {
+	for (int i = 0; i < dir.numDir; i++) {
 		fEq[i] = calculateFiEq(dir.ex[i], dir.ey[i], dir.eDotE[i] , dir.as2, dir.ws[i], rho, ux, uy, theta, uDotU);
 	}
 }
 
-inline void calculateFProp(std::vector<double>& f, std::vector<double>& fEq, std::vector<double>& aNEq, double& tau1, double& tauFactor) {
-	for (int i = 0; i < f.size(); i++) {
+inline void calculateFProp(std::vector<double>& f, std::vector<double>& fEq, int& fiSize, std::vector<double>& aNEq, double& tau1, double& tauFactor) {
+	for (int i = 0; i < fiSize; i++) {
 		f[i] += (fEq[i] - f[i]) / tau1 - tauFactor * aNEq[i];
 		//f[i] += (fEq[i] - f[i]) / tau1;
 	}
 }
 
-inline void calculateTxy(std::vector<double>& f, std::vector<double>& fEq, double& txx, double& txy, double& tyy,
+inline void calculateTxy(std::vector<double>& f, std::vector<double>& fEq, int& numDir, double& txx, double& txy, double& tyy,
 	std::vector<double>& uxf2, std::vector<double>& uxfUyf, std::vector<double>& uyf2, double& as2, double& rho, double& ux, double& uy, double& T) {
 	txx = txy = tyy = 0.0;
 	double fNEq;
-	for (int i = 0; i < f.size(); i++) {
+	for (int i = 0; i < numDir; i++) {
 		fNEq = (f[i] - fEq[i]);
 		txx += fNEq * uxf2[i];
 		txy += fNEq * uxfUyf[i];
@@ -89,27 +89,26 @@ inline double calculateAiNeq(double& fiEq, double& uxf2i, double& uxfUyfi, doubl
 
 inline void calculateANEq(std::vector<double>& fEq, std::vector<double>& aNeq, Lattice& dir, double& txx, double& txy, double& tyy,
 	double& ux, double& uy, std::vector<double>& uxf2, std::vector<double>& uxfUyf, std::vector<double>& uyf2) {
-	for (int i = 0; i < fEq.size(); i++) {
+	for (int i = 0; i < dir.numDir; i++) {
 		aNeq[i] = calculateAiNeq(fEq[i], uxf2[i], uxfUyf[i], uyf2[i], dir.as2, txx, txy, tyy, ux, uy);
 	}
 }
 
-inline void colision(std::vector<std::vector<double>>& f, Lattice dir, double tau1, double tau2) {
+inline void colision(std::vector<std::vector<double>>& f, int& fSize, Lattice dir, double tau1, double tauFactor) {
 	#pragma omp parallel
 	{
 		double rho, ux, uy, T, txx, txy, tyy, uDotU, theta;
-		std::vector<double> fEq(dir.ex.size()); //funções de distribuição de equilíbrio
-		std::vector<double> aNEq(dir.ex.size()); //parte de não equilíbrio viscoso das funções de distribuição
-		std::vector<double> uxf2(dir.ex.size()), uxfUyf(dir.ex.size()), uyf2(dir.ex.size()); //velocidades de flutuação ao quadrado
-		double tauFactor = (1 / tau2) - (1 / tau1);
-		#pragma omp for firstprivate(dir, tau1) schedule (guided)
-		for (int i = 0; i < f.size(); i++) {
+		std::vector<double> fEq(dir.numDir); //funções de distribuição de equilíbrio
+		std::vector<double> aNEq(dir.numDir); //parte de não equilíbrio viscoso das funções de distribuição
+		std::vector<double> uxf2(dir.numDir), uxfUyf(dir.numDir), uyf2(dir.numDir); //velocidades de flutuação ao quadrado
+		#pragma omp for firstprivate(dir, tau1, tauFactor) schedule (static)
+		for (int i = 0; i < fSize; i++) {
 			calculateMacVar(rho, ux, uy, T, uDotU, uxf2, uxfUyf, uyf2, f[i], dir);
 			theta = T - 1;
 			calculateFEq(rho, ux, uy, theta, uDotU, fEq, dir);
-			calculateTxy(f[i], fEq, txx, txy, tyy, uxf2, uxfUyf, uyf2, dir.as2, rho, ux, uy, T);
+			calculateTxy(f[i], fEq, dir.numDir, txx, txy, tyy, uxf2, uxfUyf, uyf2, dir.as2, rho, ux, uy, T);
 			calculateANEq(fEq, aNEq, dir, txx, txy, tyy, ux, uy, uxf2, uxfUyf, uyf2);
-			calculateFProp(f[i], fEq, aNEq, tau1, tauFactor);
+			calculateFProp(f[i], fEq, dir.numDir, aNEq, tau1, tauFactor);
 		}
 	}
 }

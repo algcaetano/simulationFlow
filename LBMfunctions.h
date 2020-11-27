@@ -137,8 +137,18 @@ double calculateError(std::vector<double>& newValues, std::vector<double>& oldVa
 	#pragma omp parallel for reduction(+:sum)
 	for (int i = 0; i < newValues.size();i++) {
 		sum += power((newValues[i] - oldValues[i]), 2);
-		//oldValues[i] = newValues[i];
 	}
 	oldValues.swap(newValues);
 	return sqrt(sum);
+}
+
+double calculateRmsqrError(std::vector<double>& newValues, std::vector<double>& oldValues) {
+	double sum = 0.0;
+	int n = newValues.size();
+	#pragma omp parallel for reduction(+:sum)
+	for (int i = 0; i < newValues.size();i++) {
+		sum += power((newValues[i] - oldValues[i]), 2);
+	}
+	oldValues.swap(newValues);
+	return sqrt(sum/n);
 }

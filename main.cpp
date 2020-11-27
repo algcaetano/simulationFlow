@@ -69,7 +69,7 @@ int main() {
 			calculateMacVar(rho, ux, uy, T, uDotU, uxf2, uxfUyf, uyf2, f[i], lattice);
 			u[i] = ux;
 		}
-		error = calculateError(u, uOld);
+		error = calculateRmsqrError(u, uOld);
 		if (saveControl == 1) {
 			saveF(f, (int)f.size(), (int)lattice.ex.size(), "fs1.dat");
 			saveControl = 2;
@@ -79,7 +79,7 @@ int main() {
 			saveControl = 1;
 		}
 		t1 = omp_get_wtime();
-		std::cout << "1000 iterations in: " << (t1 - t0) << " s. "<< maxNumThreads <<"/"<<maxNumThreads << " threads used. " <<"Error in x-component of velocity = " << error << "." << std::endl;
+		std::cout << "1000 iterations in: " << (t1 - t0) << " s. "<< maxNumThreads <<"/"<<maxNumThreads << " threads used. " <<"RMS Error in x-component of velocity = " << error << "." << std::endl;
 	}
 
 	std::ofstream myfile("velocities.txt");

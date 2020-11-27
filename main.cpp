@@ -54,15 +54,16 @@ int main() {
 	double error = 1;
 	int saveControl = 1;
 	int maxNumThreads = omp_get_max_threads();
+	int numThreads = (maxNumThreads>1)?(maxNumThreads -1):1;
 	int fSize = f.size();
 	double tauFactor = (1 / tau2) - (1 / tau1);
 	//simulação---------------------------------------
-	omp_set_num_threads(maxNumThreads);
+	omp_set_num_threads(numThreads);
 	while (error>1e-13) {
 		t0 = omp_get_wtime();
 		for (int j = 0; j < 1000; j++) {
-			colision(f, fTemp, fSize, lattice, tau1, tauFactor);
-			propagation(f, fTemp, propNoCol, propCol, fractions);
+			colision(f, fSize, lattice, tau1, tauFactor);
+			propagation(f, fTemp, fSize, lattice.numDir, propNoCol, propCol, fractions);
 		}
 		#pragma omp parallel for firstprivate(rho, ux, uy, T, uDotU, uxf2, uxfUyf, uyf2, lattice)
 		for (int i = 0; i < u.size(); i++) {
@@ -79,7 +80,7 @@ int main() {
 			saveControl = 1;
 		}
 		t1 = omp_get_wtime();
-		std::cout << "1000 iterations in: " << (t1 - t0) << " s. "<< maxNumThreads <<"/"<<maxNumThreads << " threads used. " <<"RMS Error in x-component of velocity = " << error << "." << std::endl;
+		std::cout << "1000 iterations in: " << (t1 - t0) << " s. "<< numThreads <<"/"<<maxNumThreads << " threads used. " <<"RMS Error in x-component of velocity = " << error << "." << std::endl;
 	}
 
 	std::ofstream myfile("velocities.txt");

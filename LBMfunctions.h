@@ -36,19 +36,12 @@ inline void calculateMacVar(double& rho, double& ux, double& uy, double& T, doub
 inline double calculateFiEq(int& ex, int& ey, double& eDotE, double& as2, double& w, double& rho, double& ux, 
 	double& uy, double& theta, double& uDotU) {
 	double result = 1.0;
-	//double eSqr = as2 * (ex2 + ey2);
-	//double uSqr = as2 * (power(ux,2) + power(uy,2));
-	//double theta = T - 1;
 	double F = as2 * (ux * ex + uy * ey);
 	double R = eDotE * theta - uDotU;
 	double F2 = power(F, 2);
-	//double C2 = (power(F, 2) + R - 2 * theta) / 2;
-	//double C3 = (power(F, 3) + 3 * F * R - 12 * F * theta) / 6;
-	//double C4 = (power(F, 4) + 6 * power(F, 2) * R - 3 * (12 * power(F, 2) * theta - power(R, 2)) - 24 * R * theta + 24 * power(theta, 2)) / 24;
-	//return w * rho * (1 + F + C2 + C3 + C4);
 	result += F;
 	result += (F2 + R - 2 * theta) / 2;
-	result += (power(F, 3) + 3 * F * R - 12 * F * theta) / 6;
+	result += (F2*F + 3 * F * R - 12 * F * theta) / 6;
 	result += (power(F2, 2) + 6 * F2 * R - 3 * (12 * F2 * theta - power(R, 2)) - 24 * R * theta + 24 * power(theta, 2)) / 24;
 	result *= (w * rho);
 	return result;
@@ -63,7 +56,6 @@ inline void calculateFEq(double& rho, double& ux, double& uy, double& theta, dou
 inline void calculateFProp(std::vector<double>& f, std::vector<double>& fEq, int& fiSize, std::vector<double>& aNEq, double& tau1, double& tauFactor) {
 	for (int i = 0; i < fiSize; i++) {
 		f[i] += (fEq[i] - f[i]) / tau1 - tauFactor * aNEq[i];
-		//f[i] += (fEq[i] - f[i]) / tau1;
 	}
 }
 
@@ -100,7 +92,7 @@ inline void clearTempFi(std::vector<double>& fTempi, int numDir) {
 	}
 }
 
-inline void colision(std::vector<std::vector<double>>& f, std::vector<std::vector<double>>& fTemp, int& fSize, Lattice dir, double tau1, double tauFactor) {
+inline void colision(std::vector<std::vector<double>>& f, int& fSize, Lattice dir, double tau1, double tauFactor) {
 	#pragma omp parallel
 	{
 		double rho, ux, uy, T, txx, txy, tyy, uDotU, theta;
@@ -109,7 +101,6 @@ inline void colision(std::vector<std::vector<double>>& f, std::vector<std::vecto
 		std::vector<double> uxf2(dir.numDir), uxfUyf(dir.numDir), uyf2(dir.numDir); //velocidades de flutuação ao quadrado
 		#pragma omp for firstprivate(dir, tau1, tauFactor) schedule (static)
 		for (int i = 0; i < fSize; i++) {
-			clearTempFi(fTemp[i], dir.numDir);
 			calculateMacVar(rho, ux, uy, T, uDotU, uxf2, uxfUyf, uyf2, f[i], dir);
 			theta = T - 1;
 			calculateFEq(rho, ux, uy, theta, uDotU, fEq, dir);
@@ -120,15 +111,12 @@ inline void colision(std::vector<std::vector<double>>& f, std::vector<std::vecto
 	}
 }
 
-inline void propagation(std::vector<std::vector<double>>& f, std::vector<std::vector<double>>& fTemp, 
+inline void propagation(std::vector<std::vector<double>>& f, std::vector<std::vector<double>>& fTemp, int fSize, int numDir,
 	std::vector<std::vector<int>>& propNoCol, std::vector<std::vector<int>>& propCol, std::vector<double>& fractions) {
-	int numDir = f[0].size();
-	/*#pragma omp parallel for
-	for (int i = 0; i < fTemp.size(); i++) {
-		for (int j = 0; j < numDir; j++) {
-			fTemp[i][j] = 0.0;
-		}
-	}*/
+	#pragma omp parallel for
+	for (int i = 0; i < fSize; i++) {
+		clearTempFi(fTemp[i], numDir);
+	}
 	#pragma omp parallel for
 	for (int i = 0; i < propNoCol.size(); i++) {
 		fTemp[propNoCol[i][2]][propNoCol[i][3]] = f[propNoCol[i][0]][propNoCol[i][1]];

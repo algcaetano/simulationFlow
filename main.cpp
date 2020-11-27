@@ -49,7 +49,7 @@ int main() {
 	std::vector<std::vector<double>> fTemp = f;
 	std::vector<double> u(f.size());
 	std::vector<double> uOld = u;
-	double rho, ux, uy, T, uDotU, theta;
+	double rho, ux, uy, T, uDotU;
 	std::vector<double> uxf2(lattice.ex.size()), uxfUyf(lattice.ex.size()), uyf2(lattice.ex.size()); //velocidades de flutuação ao quadrado
 	double error = 1;
 	int saveControl = 1;
@@ -61,7 +61,7 @@ int main() {
 	while (error>1e-13) {
 		t0 = omp_get_wtime();
 		for (int j = 0; j < 1000; j++) {
-			colision(f, fSize, lattice, tau1, tauFactor);
+			colision(f, fTemp, fSize, lattice, tau1, tauFactor);
 			propagation(f, fTemp, propNoCol, propCol, fractions);
 		}
 		#pragma omp parallel for firstprivate(rho, ux, uy, T, uDotU, uxf2, uxfUyf, uyf2, lattice)

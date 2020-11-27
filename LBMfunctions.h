@@ -94,7 +94,13 @@ inline void calculateANEq(std::vector<double>& fEq, std::vector<double>& aNeq, L
 	}
 }
 
-inline void colision(std::vector<std::vector<double>>& f, int& fSize, Lattice dir, double tau1, double tauFactor) {
+inline void clearTempFi(std::vector<double>& fTempi, int numDir) {
+	for (int i = 0; i < numDir; i++) {
+		fTempi[i] = 0.0;
+	}
+}
+
+inline void colision(std::vector<std::vector<double>>& f, std::vector<std::vector<double>>& fTemp, int& fSize, Lattice dir, double tau1, double tauFactor) {
 	#pragma omp parallel
 	{
 		double rho, ux, uy, T, txx, txy, tyy, uDotU, theta;
@@ -103,6 +109,7 @@ inline void colision(std::vector<std::vector<double>>& f, int& fSize, Lattice di
 		std::vector<double> uxf2(dir.numDir), uxfUyf(dir.numDir), uyf2(dir.numDir); //velocidades de flutuação ao quadrado
 		#pragma omp for firstprivate(dir, tau1, tauFactor) schedule (static)
 		for (int i = 0; i < fSize; i++) {
+			clearTempFi(fTemp[i], dir.numDir);
 			calculateMacVar(rho, ux, uy, T, uDotU, uxf2, uxfUyf, uyf2, f[i], dir);
 			theta = T - 1;
 			calculateFEq(rho, ux, uy, theta, uDotU, fEq, dir);
@@ -116,12 +123,12 @@ inline void colision(std::vector<std::vector<double>>& f, int& fSize, Lattice di
 inline void propagation(std::vector<std::vector<double>>& f, std::vector<std::vector<double>>& fTemp, 
 	std::vector<std::vector<int>>& propNoCol, std::vector<std::vector<int>>& propCol, std::vector<double>& fractions) {
 	int numDir = f[0].size();
-	#pragma omp parallel for
+	/*#pragma omp parallel for
 	for (int i = 0; i < fTemp.size(); i++) {
 		for (int j = 0; j < numDir; j++) {
 			fTemp[i][j] = 0.0;
 		}
-	}
+	}*/
 	#pragma omp parallel for
 	for (int i = 0; i < propNoCol.size(); i++) {
 		fTemp[propNoCol[i][2]][propNoCol[i][3]] = f[propNoCol[i][0]][propNoCol[i][1]];

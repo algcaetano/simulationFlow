@@ -11,7 +11,7 @@ inline double power(const double& base, int exp) {
 	return result;
 }
 
-inline void calculateMacVar(double& rho, double& ux, double& uy, double& T, double& uDotU, std::vector<double>& uxf2, 
+inline void calculateMacVar(double& rho, double& ux, double& uy, double& T, double& theta, double& uDotU, std::vector<double>& uxf2, 
 	std::vector<double>& uxfUyf, std::vector<double>& uyf2, const std::vector<double>& f, const Lattice& dir) {
 	rho = ux = uy = T = 0.0;
 	double tempFi;
@@ -26,6 +26,7 @@ inline void calculateMacVar(double& rho, double& ux, double& uy, double& T, doub
 	uy /= rho;
 	uDotU = dir.as2 * (power(ux, 2) + power(uy, 2));
 	T = ((T / rho) - uDotU) / 2;
+	theta = T - 1;
 	for (int i = 0; i < dir.numDir; i++) {
 		uxf2[i] = dir.as2 * power((dir.ex[i] - ux), 2);
 		uxfUyf[i] = dir.as2 * (dir.ex[i] - ux) * (dir.ey[i] - uy);
@@ -92,6 +93,16 @@ inline void clearTempFi(std::vector<double>& fTempi, int numDir) {
 	}
 }
 
+void calculateNewF(double& rho, double& ux, double&  uy, double& T, double&  txx, double&  txy, double&  tyy, double&  uDotU, 
+	double& theta, std::vector<double>& fi, std::vector<double>& fEq, std::vector<double>& aNEq, std::vector<double>& uxf2, std::vector<double>& uxfUyf,
+	std::vector<double>& uyf2, double& tau1, double& tauFactor, Lattice& dir) {
+	calculateMacVar(rho, ux, uy, T, theta, uDotU, uxf2, uxfUyf, uyf2, fi, dir);
+	calculateFEq(rho, ux, uy, theta, uDotU, fEq, dir);
+	calculateTxy(fi, fEq, dir.numDir, txx, txy, tyy, uxf2, uxfUyf, uyf2, dir.as2, rho, ux, uy, T);
+	calculateANEq(fEq, aNEq, dir, txx, txy, tyy, ux, uy, uxf2, uxfUyf, uyf2);
+	calculateFProp(fi, fEq, dir.numDir, aNEq, tau1, tauFactor);
+}
+
 inline void colision(std::vector<std::vector<double>>& f, int& fSize, Lattice dir, double tau1, double tauFactor) {
 	#pragma omp parallel
 	{
@@ -101,12 +112,12 @@ inline void colision(std::vector<std::vector<double>>& f, int& fSize, Lattice di
 		std::vector<double> uxf2(dir.numDir), uxfUyf(dir.numDir), uyf2(dir.numDir); //velocidades de flutuação ao quadrado
 		#pragma omp for firstprivate(dir, tau1, tauFactor) schedule (static)
 		for (int i = 0; i < fSize; i++) {
-			calculateMacVar(rho, ux, uy, T, uDotU, uxf2, uxfUyf, uyf2, f[i], dir);
-			theta = T - 1;
+			calculateMacVar(rho, ux, uy, T, theta, uDotU, uxf2, uxfUyf, uyf2, f[i], dir);
 			calculateFEq(rho, ux, uy, theta, uDotU, fEq, dir);
 			calculateTxy(f[i], fEq, dir.numDir, txx, txy, tyy, uxf2, uxfUyf, uyf2, dir.as2, rho, ux, uy, T);
 			calculateANEq(fEq, aNEq, dir, txx, txy, tyy, ux, uy, uxf2, uxfUyf, uyf2);
 			calculateFProp(f[i], fEq, dir.numDir, aNEq, tau1, tauFactor);
+			//calculateNewF(rho, ux, uy, T, txx, txy, tyy, uDotU, theta, f[i], fEq, aNEq, uxf2, uxfUyf, uyf2, tau1, tauFactor, dir);
 		}
 	}
 }

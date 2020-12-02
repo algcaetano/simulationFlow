@@ -62,7 +62,7 @@ int main() {
 	std::vector<double> u(f.size());
 	std::vector<double> Temp(f.size());
 	std::vector<double> uOld = u;
-	double rho, ux, uy, T, uDotU;
+	double rho, ux, uy, T, theta, uDotU;
 	std::vector<double> uxf2(lattice.ex.size()), uxfUyf(lattice.ex.size()), uyf2(lattice.ex.size()); //velocidades de flutuação ao quadrado
 	double error = 1;
 	int saveControl = 1;
@@ -80,7 +80,7 @@ int main() {
 		}
 		#pragma omp parallel for firstprivate(rho, ux, uy, T, uDotU, uxf2, uxfUyf, uyf2, lattice)
 		for (int i = 0; i < u.size(); i++) {
-			calculateMacVar(rho, ux, uy, T, uDotU, uxf2, uxfUyf, uyf2, f[i], lattice);
+			calculateMacVar(rho, ux, uy, T, theta, uDotU, uxf2, uxfUyf, uyf2, f[i], lattice);
 			u[i] = ux;
 			Temp[i] = T;
 		}

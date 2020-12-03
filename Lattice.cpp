@@ -39,6 +39,7 @@ void Lattice::setLattice(int order, std::vector<int>& ex, std::vector<int>& ey, 
 			w13_20, w13_20, w13_20, w13_20, w13_20, w13_20, w13_20, w13_20, w21_24, w21_24, w21_24, w21_24,
 			w25_28, w25_28, w25_28, w25_28, w29_36, w29_36, w29_36, w29_36, w29_36, w29_36, w29_36, w29_36 };
 		as = (1.0 / 6.0) * sqrt(49.0 - 17.0 * (pow(7, (2.0 / 3.0))) / R + (pow(7, (1.0 / 3.0))) * R);
+		maxDisp = 3;
 		as2 = as * as;
 		ex2 = ex;
 		ey2 = ey;

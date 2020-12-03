@@ -20,6 +20,7 @@ public:
 	double as; //fator de escala
 	double as2; //fator de escala ao quadrado
 	int numDir; //número de direções discretas
+	int maxDisp;
 private:
 	//functions members
 	void setLattice(int order, std::vector<int>& ex, std::vector<int>& ey, std::vector<double>& ws, double& as);

@@ -35,5 +35,8 @@
     <ClInclude Include="Lattice.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BoundariesFunctions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -152,6 +152,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AuxFunctions.h" />
+    <ClInclude Include="BoundariesFunctions.h" />
     <ClInclude Include="Lattice.h" />
     <ClInclude Include="LBMfunctions.h" />
     <ClInclude Include="PointDouble.h" />

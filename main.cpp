@@ -4,6 +4,7 @@
 #include"PointDouble.h"
 #include "Lattice.h"
 #include"LBMfunctions.h"
+#include "BoundariesFunctions.h"
 
 int main() {
 
@@ -56,6 +57,12 @@ int main() {
 			savePoints.push_back(i);
 		}
 	}
+
+	//change propNoCol and propCol to achieve periodic boundary conditions-----------------------------------------------------
+
+
+
+	//-------------------------------------------------------------------------------------------------------------------------
 
 	double t0, t1;
 	std::vector<std::vector<double>> fTemp = f;

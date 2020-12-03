@@ -15,10 +15,9 @@ double max(double& d1, double& d2) {
 	return (d2 > d1) ? d2 : d1;
 }
 
-template <class T>
-int findID(std::vector<T>& input, T& ref) {
+int findID(std::vector<PointDouble>& input, PointDouble& ref) {
 	int id = 0;
-	for (std::vector<T>::iterator it = input.begin(); it != input.end(); it++) {
+	for (std::vector<PointDouble>::iterator it = input.begin(); it != input.end(); it++) {
 		if (*it == ref) {
 			return id;
 		}

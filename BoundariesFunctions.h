@@ -32,18 +32,21 @@ bool isDomain(double& refValue, double& periodicLine1, double& periodicLine2){
 	return ((refValue < max(periodicLine1, periodicLine2)) && (refValue > min(periodicLine1, periodicLine2))) ? true : false;
 }
 
-void applyPeriodicX(std::vector<std::vector<int>>& prop, std::vector<PointDouble>& domainPoints, double& periodicLine1, double& periodicLine2, Lattice dir) {
+void applyPeriodicX(std::vector<std::vector<int>>& prop, std::vector<PointDouble>& domainPoints, double& periodicLine1, double& periodicLine2) {
 	double xRef;
 	double difLimits = max(periodicLine1, periodicLine2) - min(periodicLine1, periodicLine2);
-	PointDouble pRef;
+	PointDouble pRef, x0, xf, xPer;
 	for (int i = 0; i < prop.size(); i++) {
-		if (isDomain(domainPoints[prop[i][0]].X, periodicLine1, periodicLine2)) {//ponto inicial faz parte do domínio
-			if (!isDomain(domainPoints[prop[i][2]].X, periodicLine1, periodicLine2)) {//ponto final não faz parte do domínio
+		x0 = domainPoints[prop[i][0]];//ponto inicial da propagação
+		xf = domainPoints[prop[i][2]];//ponto final da propagação
+		if (isDomain(x0.X, periodicLine1, periodicLine2)) {//ponto inicial faz parte do domínio entre as linhas
+			if (!isDomain(xf.X, periodicLine1, periodicLine2)) {//ponto final não faz parte do domínio entre as linhas
 				//o ponto final está à direita ou à esquerda do domínio?
-				xRef = (domainPoints[prop[i][2]].X > max(periodicLine1, periodicLine2)) ? (domainPoints[prop[i][2]].X-difLimits) : (domainPoints[prop[i][2]].X + difLimits);
+				xRef = (xf.X > max(periodicLine1, periodicLine2)) ? (xf.X-difLimits) : (xf.X + difLimits);
 				pRef.X = xRef;// x final muda
-				pRef.Y = domainPoints[prop[i][2]].Y; // y final continua igual
+				pRef.Y = xf.Y; // y final continua igual
 				int id = findID(domainPoints, pRef); //achar qual o id desse ponto
+				xPer = domainPoints[id];
 				prop[i][2] = id; //mudar o ponto final
 			}
 		}

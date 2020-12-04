@@ -31,7 +31,7 @@ int main() {
 	}
 	double L = xMax - xMin + 1;
 	double Kn = 0.0001;
-	double Re = 1000;
+	double Re = 100;
 	double Ma = 0.01;
 	double T0 = 1;
 	double cs = sqrt(2 * T0) / lattice.as;
@@ -60,14 +60,25 @@ int main() {
 
 	//change propNoCol and propCol to achieve periodic boundary conditions-----------------------------------------------------
 
-
+	double periodicLine1 = xMin + 0.5 + lattice.maxDisp - 1;
+	double periodicLine2 = xMax - 0.5 - lattice.maxDisp + 1;
+	applyPeriodicX(propNoCol, domainPoints, periodicLine1, periodicLine2);
+	applyPeriodicX(propCol, domainPoints, periodicLine1, periodicLine2);
+	std::vector<int> errorPoints;
+	for (int i = 0; i < domainPoints.size(); i++) {
+		if (isDomain(domainPoints[i].X, periodicLine1, periodicLine2)) {
+			errorPoints.push_back(i);
+		}
+	}
 
 	//-------------------------------------------------------------------------------------------------------------------------
 
 	double t0, t1;
 	std::vector<std::vector<double>> fTemp = f;
-	std::vector<double> u(f.size());
-	std::vector<double> Temp(f.size());
+	//std::vector<double> u(f.size());
+	//std::vector<double> Temp(f.size());
+	std::vector<double> u(errorPoints.size());
+	std::vector<double> Temp(errorPoints.size());
 	std::vector<double> uOld = u;
 	double rho, ux, uy, T, theta, uDotU;
 	std::vector<double> uxf2(lattice.ex.size()), uxfUyf(lattice.ex.size()), uyf2(lattice.ex.size()); //velocidades de flutuação ao quadrado
@@ -87,7 +98,7 @@ int main() {
 		}
 		#pragma omp parallel for firstprivate(rho, ux, uy, T, uDotU, uxf2, uxfUyf, uyf2, lattice)
 		for (int i = 0; i < u.size(); i++) {
-			calculateMacVar(rho, ux, uy, T, theta, uDotU, uxf2, uxfUyf, uyf2, f[i], lattice);
+			calculateMacVar(rho, ux, uy, T, theta, uDotU, uxf2, uxfUyf, uyf2, f[errorPoints[i]], lattice);
 			u[i] = ux;
 			Temp[i] = T;
 		}
@@ -107,7 +118,7 @@ int main() {
 	std::ofstream myfile("velocities.txt");
 	if (myfile.is_open()) {
 		for (int i = 0; i < savePoints.size();i++) {
-			myfile << domainPoints[savePoints[i]].X << " " << domainPoints[savePoints[i]].Y << " " << u[savePoints[i]] / u0 << " " << Temp[i] << "\n";
+			myfile << domainPoints[savePoints[i]].X << " " << domainPoints[savePoints[i]].Y << " " << u[savePoints[i]] / u0 << " " << Temp[savePoints[i]] << "\n";
 		}
 	}
 	else {

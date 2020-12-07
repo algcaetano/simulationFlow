@@ -19,8 +19,6 @@ int main() {
 	loadFiles.open("propCol.dat", std::ios::in | std::ios::binary);
 	std::vector<std::vector<int>> propCol = readProp(loadFiles);
 	loadFiles.open("taus.dat", std::ios::in | std::ios::binary);
-	//double tau1, tau2;
-	//readTaus(tau1, tau2, loadFiles);
 	Lattice lattice(4);
 
 	double xMin = domainPoints[0].X;
@@ -59,19 +57,17 @@ int main() {
 	}
 
 	//change propNoCol and propCol to achieve periodic boundary conditions-----------------------------------------------------
-
-	double periodicLine1 = xMin + 0.5 + lattice.maxDisp - 1;
-	double periodicLine2 = xMax - 0.5 - lattice.maxDisp + 1;
-	applyPeriodicX(propNoCol, domainPoints, periodicLine1, periodicLine2);
-	applyPeriodicX(propCol, domainPoints, periodicLine1, periodicLine2);
+	double periodicLine1 = xMin + 0.5 + lattice.maxDisp - 1; //right limit
+	double periodicLine2 = xMax - 0.5 - lattice.maxDisp + 1; //left limit
+	applyPeriodicX(propNoCol, domainPoints, periodicLine1, periodicLine2); //periodic with no collision
+	applyPeriodicX(propCol, domainPoints, periodicLine1, periodicLine2); //periodic with collision
+	//-------------------------------------------------------------------------------------------------------------------------
 	std::vector<int> errorPoints;
 	for (int i = 0; i < domainPoints.size(); i++) {
 		if (isDomain(domainPoints[i].X, periodicLine1, periodicLine2)) {
 			errorPoints.push_back(i);
 		}
 	}
-
-	//-------------------------------------------------------------------------------------------------------------------------
 
 	double t0, t1;
 	std::vector<std::vector<double>> fTemp = f;

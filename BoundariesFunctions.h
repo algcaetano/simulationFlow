@@ -45,9 +45,29 @@ void applyPeriodicX(std::vector<std::vector<int>>& prop, std::vector<PointDouble
 				xRef = (xf.X > max(periodicLine1, periodicLine2)) ? (xf.X-difLimits) : (xf.X + difLimits);
 				pRef.X = xRef;// x final muda
 				pRef.Y = xf.Y; // y final continua igual
-				int id = findID(domainPoints, pRef); //achar qual o id desse ponto
-				xPer = domainPoints[id];
-				prop[i][2] = id; //mudar o ponto final
+				prop[i][2] = findID(domainPoints, pRef); //achar qual o id desse ponto
+			}
+		}
+		else {
+			prop[i][2] = prop[i][0]; //esse ponto está fora do domínio e não pode propagar => fica no mesmo lugar
+		}
+	}
+}
+
+void applyPeriodicY(std::vector<std::vector<int>>& prop, std::vector<PointDouble>& domainPoints, double& periodicLine1, double& periodicLine2) {
+	double yRef;
+	double difLimits = max(periodicLine1, periodicLine2) - min(periodicLine1, periodicLine2);
+	PointDouble pRef, y0, yf, yPer;
+	for (int i = 0; i < prop.size(); i++) {
+		y0 = domainPoints[prop[i][0]];//ponto inicial da propagação
+		yf = domainPoints[prop[i][2]];//ponto final da propagação
+		if (isDomain(y0.Y, periodicLine1, periodicLine2)) {//ponto inicial faz parte do domínio entre as linhas
+			if (!isDomain(yf.Y, periodicLine1, periodicLine2)) {//ponto final não faz parte do domínio entre as linhas
+				//o ponto final está à direita ou à esquerda do domínio?
+				yRef = (yf.Y > max(periodicLine1, periodicLine2)) ? (yf.Y - difLimits) : (yf.Y + difLimits);
+				pRef.Y = yRef;// y final muda
+				pRef.X = yf.X; // x final continua igual
+				prop[i][2] = findID(domainPoints, pRef); //achar qual o id desse ponto
 			}
 		}
 		else {

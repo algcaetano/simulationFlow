@@ -137,3 +137,11 @@ std::vector<double> readDoubleVec(std::ifstream& inputFile) {
 	inputFile.close();
 	return f;
 }
+
+double readDoubleVar(const std::string& varName) {
+	double output = 0.0;
+	std::ifstream inputFile(varName, std::ios::in | std::ios::binary);
+	inputFile.read((char*)&output, sizeof(double));
+	inputFile.close();
+	return output;
+}

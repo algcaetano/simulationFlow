@@ -46,28 +46,31 @@ int main() {
 		<< "relaxation time 1: " << tau1 << "\n"
 		<< "relaxation time 2: " << tau2 << "\n";
 
-	std::vector<int> savePoints;
-	double fractpart, intpart;
-	fractpart = modf(L / 2, &intpart);
-	double xMiddle = intpart + 0.5;
-	for (int i = 0; i < domainPoints.size();i++) {
-		if (compareDouble(xMiddle, domainPoints[i].X)) {
-			savePoints.push_back(i);
-		}
-	}
-
 	//change propNoCol and propCol to achieve periodic boundary conditions-----------------------------------------------------
 	double periodicLine1 = xMin + 0.5 + lattice.maxDisp - 1; //right limit
 	double periodicLine2 = xMax - 0.5 - lattice.maxDisp + 1; //left limit
 	applyPeriodicX(propNoCol, domainPoints, periodicLine1, periodicLine2); //periodic with no collision
 	applyPeriodicX(propCol, domainPoints, periodicLine1, periodicLine2); //periodic with collision
 	//-------------------------------------------------------------------------------------------------------------------------
+	//points inside the domain-------------------------------------------------------------------------------------------------
 	std::vector<int> errorPoints;
 	for (int i = 0; i < domainPoints.size(); i++) {
 		if (isDomain(domainPoints[i].X, periodicLine1, periodicLine2)) {
 			errorPoints.push_back(i);
 		}
 	}
+	//-------------------------------------------------------------------------------------------------------------------------
+	//points to be saved (inside domain ponts only)----------------------------------------------------------------------------
+	std::vector<int> savePoints;
+	double fractpart, intpart;
+	fractpart = modf(L / 2, &intpart);
+	double xMiddle = intpart + 0.5;
+	for (int i = 0; i < errorPoints.size();i++) {
+		if (compareDouble(xMiddle, domainPoints[errorPoints[i]].X)) {
+			savePoints.push_back(i);
+		}
+	}
+	//--------------------------------------------------------------------------------------------------------------------------
 
 	double t0, t1;
 	std::vector<std::vector<double>> fTemp = f;

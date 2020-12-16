@@ -18,7 +18,6 @@ int main() {
 	std::vector<std::vector<int>> propNoCol = readProp(loadFiles);
 	loadFiles.open("propCol.dat", std::ios::in | std::ios::binary);
 	std::vector<std::vector<int>> propCol = readProp(loadFiles);
-	loadFiles.open("taus.dat", std::ios::in | std::ios::binary);
 	Lattice lattice(4);
 
 	double xMin = domainPoints[0].X;
@@ -27,17 +26,17 @@ int main() {
 		xMin = (domainPoints[i].X < xMin) ? domainPoints[i].X : xMin;
 		xMax = (domainPoints[i].X > xMax) ? domainPoints[i].X : xMax;
 	}
-	double L = xMax - xMin + 1;
-	double Kn = 0.0001;
-	double Re = 100;
-	double Ma = 0.01;
+	double L = readDoubleVar("L.dat");
+	double Kn = readDoubleVar("Kn.dat");
+	double Re = readDoubleVar("Re.dat");
+	double Ma = Kn * Re;
 	double T0 = 1;
 	double cs = sqrt(2 * T0) / lattice.as;
 	double u0 = Kn * Re * cs;
 	double nu = u0 * L / Re;
-	double tau2 = (pow(lattice.as, 2) * nu) / T0 + 1.0 / 2.0;
-	double Pr = 0.7;
-	double tau1 = (tau2 - 1.0 / 2.0) / Pr + 1.0 / 2.0;
+	double Pr = readDoubleVar("Pr.dat");
+	double tau1 = readDoubleVar("tau1.dat");
+	double tau2 = readDoubleVar("tau2.dat");
 	std::cout << "Number of points in x direction: " << L << "\n"
 		<< "Reynolds: " << Re << "\n"
 		<< "Knudsen: " << Kn << "\n"
@@ -49,8 +48,8 @@ int main() {
 	//change propNoCol and propCol to achieve periodic boundary conditions-----------------------------------------------------
 	double periodicLine1 = xMin + 0.5 + lattice.maxDisp - 1; //right limit
 	double periodicLine2 = xMax - 0.5 - lattice.maxDisp + 1; //left limit
-	applyPeriodicX(propNoCol, domainPoints, periodicLine1, periodicLine2); //periodic with no collision
-	applyPeriodicX(propCol, domainPoints, periodicLine1, periodicLine2); //periodic with collision
+	//applyPeriodicX(propNoCol, domainPoints, periodicLine1, periodicLine2); //periodic with no collision
+	//applyPeriodicX(propCol, domainPoints, periodicLine1, periodicLine2); //periodic with collision
 	//-------------------------------------------------------------------------------------------------------------------------
 	//points inside the domain-------------------------------------------------------------------------------------------------
 	std::vector<int> errorPoints;
@@ -65,8 +64,13 @@ int main() {
 	double fractpart, intpart;
 	fractpart = modf(L / 2, &intpart);
 	double xMiddle = intpart + 0.5;
-	for (int i = 0; i < errorPoints.size();i++) {
-		if (compareDouble(xMiddle, domainPoints[errorPoints[i]].X)) {
+	//for (int i = 0; i < errorPoints.size();i++) {
+	//	if (compareDouble(xMiddle, domainPoints[errorPoints[i]].X)) {
+	//		savePoints.push_back(i);
+	//	}
+	//}
+	for (int i = 0; i < domainPoints.size(); i++) {
+		if (compareDouble(xMiddle, domainPoints[i].X)) {
 			savePoints.push_back(i);
 		}
 	}
@@ -74,10 +78,10 @@ int main() {
 
 	double t0, t1;
 	std::vector<std::vector<double>> fTemp = f;
-	//std::vector<double> u(f.size());
-	//std::vector<double> Temp(f.size());
-	std::vector<double> u(errorPoints.size());
-	std::vector<double> Temp(errorPoints.size());
+	std::vector<double> u(f.size());
+	std::vector<double> Temp(f.size());
+	//std::vector<double> u(errorPoints.size());
+	//std::vector<double> Temp(errorPoints.size());
 	std::vector<double> uOld = u;
 	double rho, ux, uy, T, theta, uDotU;
 	std::vector<double> uxf2(lattice.ex.size()), uxfUyf(lattice.ex.size()), uyf2(lattice.ex.size()); //velocidades de flutuação ao quadrado
@@ -97,7 +101,8 @@ int main() {
 		}
 		#pragma omp parallel for firstprivate(rho, ux, uy, T, uDotU, uxf2, uxfUyf, uyf2, lattice)
 		for (int i = 0; i < u.size(); i++) {
-			calculateMacVar(rho, ux, uy, T, theta, uDotU, uxf2, uxfUyf, uyf2, f[errorPoints[i]], lattice);
+			//calculateMacVar(rho, ux, uy, T, theta, uDotU, uxf2, uxfUyf, uyf2, f[errorPoints[i]], lattice);
+			calculateMacVar(rho, ux, uy, T, theta, uDotU, uxf2, uxfUyf, uyf2, f[i], lattice);
 			u[i] = ux;
 			Temp[i] = T;
 		}
